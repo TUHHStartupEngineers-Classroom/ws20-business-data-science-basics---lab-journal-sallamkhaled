@@ -414,105 +414,201 @@ div.tocify {
 <p>This is an <code>.Rmd</code> file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a # in front of your text, it will create a top level-header.</p>
 <div id="my-first-post" class="section level1">
 <h1><span class="header-section-number">1</span> My first post</h1>
-<p>Last compiled: 2020-11-29</p>
+<p>Last compiled: 2020-11-30</p>
 <p>Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left.</p>
-<div id="first-challenge-task" class="section level2">
-<h2><span class="header-section-number">1.1</span> First challenge task</h2>
-</div>
-</div>
-<div id="data-science-at-tuhh" class="section level1">
-<h1><span class="header-section-number">2</span> Data Science at TUHH ——————————————————</h1>
-</div>
-<div id="sales-analysis--" class="section level1">
-<h1><span class="header-section-number">3</span> SALES ANALYSIS —-</h1>
-</div>
-<div id="load-libraries--" class="section level1">
-<h1><span class="header-section-number">4</span> 1.0 Load libraries —-</h1>
-<p>library(tidyverse)</p>
-<p>library(readxl)</p>
-</div>
-<div id="importing-files--" class="section level1">
-<h1><span class="header-section-number">5</span> 2.0 Importing Files —-</h1>
-<p>bikes_tbl &lt;- read_excel(path = “00_data/01_bike_sales/01_raw_data/bikes.xlsx”) orderlines_tbl &lt;- read_excel(“00_data/01_bike_sales/01_raw_data/orderlines.xlsx”) bikeshops_tbl &lt;- read_excel(“00_data/01_bike_sales/01_raw_data/bikeshops.xlsx”)</p>
-</div>
-<div id="examining-data--" class="section level1">
-<h1><span class="header-section-number">6</span> 3.0 Examining Data —-</h1>
-<p>orderlines_tbl glimpse(orderlines_tbl)</p>
-</div>
-<div id="joining-data--" class="section level1">
-<h1><span class="header-section-number">7</span> 4.0 Joining Data —-</h1>
-<p>bike_orderlines_joined_tbl &lt;- orderlines_tbl %&gt;% left_join(bikes_tbl, by = c(“product.id” = “bike.id”)) %&gt;% left_join(bikeshops_tbl, by = c(“customer.id” = “bikeshop.id”))</p>
-</div>
-<div id="wrangling-data--" class="section level1">
-<h1><span class="header-section-number">8</span> 5.0 Wrangling Data —-</h1>
-<p>bike_orderlines_wrangled_tbl &lt;- bike_orderlines_joined_tbl %&gt;% separate(col = location, into = c(“city”, “state”), sep = “,”) %&gt;% mutate(total.price = price * quantity)</p>
-</div>
-<div id="business-insights--" class="section level1">
-<h1><span class="header-section-number">9</span> 6.0 Business Insights —-</h1>
-</div>
-<div id="sales-by-state--" class="section level1">
-<h1><span class="header-section-number">10</span> 6.1 Sales by State —-</h1>
-<p>library(lubridate)</p>
-</div>
-<div id="step-1---manipulate" class="section level1">
-<h1><span class="header-section-number">11</span> Step 1 - Manipulate</h1>
-<p>sales_by_state_tbl &lt;- bike_orderlines_wrangled_tbl %&gt;% select(state, total.price) %&gt;% group_by(state) %&gt;% summarize(sales = sum(total.price)) %&gt;% mutate(sales_text = scales::dollar(sales, big.mark = “.”, decimal.mark = “,”, prefix = "“, suffix =” €")) sales_by_state_tbl %&gt;%</p>
-</div>
-<div id="step-2---visualize" class="section level1">
-<h1><span class="header-section-number">12</span> Step 2 - Visualize</h1>
-<p># Setup canvas with the columns year (x-axis) and sales (y-axis) ggplot(aes(x = state, y = sales)) +</p>
-<p># Geometries geom_col(fill = “#2DC6D6”) + # Use geom_col for a bar plot geom_label(aes(label = sales_text)) + geom_smooth(method = “lm”, se = FALSE) + # Adding a trendline theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Adding labels to the bars # Formatting scale_y_continuous(labels = scales::dollar_format(big.mark = “.”, decimal.mark = “,”, prefix = "“, suffix =” €“)) + labs( title =”Revenue by state“, subtitle =”“, x =”“, # Override defaults for x and y y =”Revenue" )</p>
-</div>
-<div id="sales-by-year-and-state--" class="section level1">
-<h1><span class="header-section-number">13</span> 6.2 Sales by Year and State —-</h1>
-</div>
-<div id="step-1---manipulate-1" class="section level1">
-<h1><span class="header-section-number">14</span> Step 1 - Manipulate</h1>
-<p>sales_by_year_state_tbl &lt;- bike_orderlines_wrangled_tbl %&gt;%</p>
-<p># Select columns and add a year select(order.date, total.price, state) %&gt;% mutate(year = year(order.date)) %&gt;%</p>
-<p># Group by and summarize year and main catgegory group_by(year, state) %&gt;% summarise(sales = sum(total.price)) %&gt;% ungroup() %&gt;%</p>
-<p># Format $ Text mutate(sales_text = scales::dollar(sales, big.mark = “.”, decimal.mark = “,”, prefix = "“, suffix =” €"))</p>
-<p>sales_by_year_state_tbl</p>
-</div>
-<div id="step-2---visualize-1" class="section level1">
-<h1><span class="header-section-number">15</span> Step 2 - Visualize</h1>
-<p>sales_by_year_state_tbl %&gt;%</p>
-<p># Set up x, y, fill ggplot(aes(x = year, y = sales, fill = state)) +</p>
-<p># Geometries geom_col() + # Run up to here to get a stacked bar plot</p>
-<p># Facet facet_wrap(~ state) +</p>
-<p># Formatting scale_y_continuous(labels = scales::dollar_format(big.mark = “.”, decimal.mark = “,”, prefix = "“, suffix =” €“)) + labs( title =”Revenue by year and state“, subtitle =”Each state has a different trend“, fill =”State" # Changes the legend name )</p>
-</div>
-<div id="writing-files--" class="section level1">
-<h1><span class="header-section-number">16</span> 7.0 Writing Files —-</h1>
-</div>
-<div id="excel--" class="section level1">
-<h1><span class="header-section-number">17</span> 7.1 Excel —-</h1>
-<p>install.packages(“writexl”) library(“writexl”) bike_orderlines_wrangled_tbl %&gt;% write_xlsx(“00_data/01_bike_sales/02_wrangled_data/bike_orderlines.xlsx”)</p>
-</div>
-<div id="csv--" class="section level1">
-<h1><span class="header-section-number">18</span> 7.2 CSV —-</h1>
-<p>bike_orderlines_wrangled_tbl %&gt;% write_csv(“00_data/01_bike_sales/02_wrangled_data/bike_orderlines.csv”)</p>
-</div>
-<div id="rds--" class="section level1">
-<h1><span class="header-section-number">19</span> 7.3 RDS —-</h1>
-<p>bike_orderlines_wrangled_tbl %&gt;% write_rds(“00_data/01_bike_sales/02_wrangled_data/bike_orderlines.rds”)</p>
+<pre class="r"><code>## First challenge task
+
+# Data Science at TUHH ------------------------------------------------------
+# SALES ANALYSIS ----
+
+# 1.0 Load libraries ----
+
+library(tidyverse)
+
+library(readxl)
+options(repos=&quot;https://cran.rstudio.com&quot; )
+
+# 2.0 Importing Files ----
+
+bikes_tbl      &lt;- read_excel(path = &quot;00_data/01_bike_sales/01_raw_data/bikes.xlsx&quot;)
+orderlines_tbl &lt;- read_excel(&quot;00_data/01_bike_sales/01_raw_data/orderlines.xlsx&quot;)
+bikeshops_tbl  &lt;- read_excel(&quot;00_data/01_bike_sales/01_raw_data/bikeshops.xlsx&quot;)
+
+# 3.0 Examining Data ----
+
+orderlines_tbl</code></pre>
+<pre><code>## # A tibble: 15,644 x 7
+##    ...1  order.id order.line order.date          customer.id product.id quantity
+##    &lt;chr&gt;    &lt;dbl&gt;      &lt;dbl&gt; &lt;dttm&gt;                    &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;
+##  1 1            1          1 2015-01-07 00:00:00           2       2681        1
+##  2 2            1          2 2015-01-07 00:00:00           2       2411        1
+##  3 3            2          1 2015-01-10 00:00:00          10       2629        1
+##  4 4            2          2 2015-01-10 00:00:00          10       2137        1
+##  5 5            3          1 2015-01-10 00:00:00           6       2367        1
+##  6 6            3          2 2015-01-10 00:00:00           6       1973        1
+##  7 7            3          3 2015-01-10 00:00:00           6       2422        1
+##  8 8            3          4 2015-01-10 00:00:00           6       2655        1
+##  9 9            3          5 2015-01-10 00:00:00           6       2247        1
+## 10 10           4          1 2015-01-11 00:00:00          22       2408        1
+## # ... with 15,634 more rows</code></pre>
+<pre class="r"><code>glimpse(orderlines_tbl)</code></pre>
+<pre><code>## Rows: 15,644
+## Columns: 7
+## $ ...1        &lt;chr&gt; &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;7&quot;, &quot;8&quot;, &quot;9&quot;, &quot;10&quot;, &quot;11&quot;...
+## $ order.id    &lt;dbl&gt; 1, 1, 2, 2, 3, 3, 3, 3, 3, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7...
+## $ order.line  &lt;dbl&gt; 1, 2, 1, 2, 1, 2, 3, 4, 5, 1, 1, 2, 3, 4, 1, 2, 3, 4, 1...
+## $ order.date  &lt;dttm&gt; 2015-01-07, 2015-01-07, 2015-01-10, 2015-01-10, 2015-0...
+## $ customer.id &lt;dbl&gt; 2, 2, 10, 10, 6, 6, 6, 6, 6, 22, 8, 8, 8, 8, 16, 16, 16...
+## $ product.id  &lt;dbl&gt; 2681, 2411, 2629, 2137, 2367, 1973, 2422, 2655, 2247, 2...
+## $ quantity    &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1...</code></pre>
+<pre class="r"><code># 4.0 Joining Data ----
+
+bike_orderlines_joined_tbl &lt;- orderlines_tbl %&gt;%
+  left_join(bikes_tbl, by = c(&quot;product.id&quot; = &quot;bike.id&quot;)) %&gt;%
+  left_join(bikeshops_tbl, by = c(&quot;customer.id&quot; = &quot;bikeshop.id&quot;))
+
+
+# 5.0 Wrangling Data ----
+
+bike_orderlines_wrangled_tbl &lt;- bike_orderlines_joined_tbl %&gt;%
+  separate(col    = location,
+           into   = c(&quot;city&quot;, &quot;state&quot;),
+           sep    = &quot;, &quot;) %&gt;%
+  mutate(total.price = price * quantity)
+
+
+# 6.0 Business Insights ----
+# 6.1 Sales by State ----
+
+library(lubridate)
+
+# Step 1 - Manipulate
+
+sales_by_state_tbl &lt;- bike_orderlines_wrangled_tbl %&gt;%
+  select(state, total.price) %&gt;%
+  group_by(state) %&gt;%
+  summarize(sales = sum(total.price)) %&gt;%
+  mutate(sales_text = scales::dollar(sales, big.mark = &quot;.&quot;, 
+                                     decimal.mark = &quot;,&quot;, 
+                                     prefix = &quot;&quot;, 
+                                     suffix = &quot; €&quot;))
+sales_by_state_tbl %&gt;%
+
+# Step 2 - Visualize
+
+
+  
+  # Setup canvas with the columns year (x-axis) and sales (y-axis)
+  ggplot(aes(x = state, y = sales)) + 
+  
+  # Geometries
+  geom_col(fill = &quot;#2DC6D6&quot;) + # Use geom_col for a bar plot
+  geom_label(aes(label = sales_text)) + 
+  geom_smooth(method = &quot;lm&quot;, se = FALSE) + # Adding a trendline
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Adding labels to the bars
+  # Formatting
+  scale_y_continuous(labels = scales::dollar_format(big.mark = &quot;.&quot;, 
+                                                    decimal.mark = &quot;,&quot;, 
+                                                    prefix = &quot;&quot;, 
+                                                    suffix = &quot; €&quot;)) +
+  labs(
+    title    = &quot;Revenue by state&quot;,
+    subtitle = &quot;&quot;,
+    x = &quot;&quot;, # Override defaults for x and y
+    y = &quot;Revenue&quot;
+  )</code></pre>
+<p><img src="journal_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<pre class="r"><code># 6.2 Sales by Year and State ----
+
+# Step 1 - Manipulate
+sales_by_year_state_tbl &lt;- bike_orderlines_wrangled_tbl %&gt;%
+  
+  # Select columns and add a year
+  select(order.date, total.price, state) %&gt;%
+  mutate(year = year(order.date)) %&gt;%
+  
+  # Group by and summarize year and main catgegory
+  group_by(year, state) %&gt;%
+  summarise(sales = sum(total.price)) %&gt;%
+  ungroup() %&gt;%
+  
+  # Format $ Text
+  mutate(sales_text = scales::dollar(sales, big.mark = &quot;.&quot;, 
+                                     decimal.mark = &quot;,&quot;, 
+                                     prefix = &quot;&quot;, 
+                                     suffix = &quot; €&quot;))
+
+sales_by_year_state_tbl  </code></pre>
+<pre><code>## # A tibble: 60 x 4
+##     year state                           sales sales_text 
+##    &lt;dbl&gt; &lt;chr&gt;                           &lt;dbl&gt; &lt;chr&gt;      
+##  1  2015 Baden-Württemberg             1031924 1.031.924 €
+##  2  2015 Bavaria                       1301461 1.301.461 €
+##  3  2015 Berlin                          95853 95.853 €   
+##  4  2015 Bremen                        1395912 1.395.912 €
+##  5  2015 Hamburg                        423090 423.090 €  
+##  6  2015 Hesse                          308609 308.609 €  
+##  7  2015 Lower Saxony                   584386 584.386 €  
+##  8  2015 Mecklenburg-Western Pomerania  222003 222.003 €  
+##  9  2015 North Rhine-Westphalia        3735092 3.735.092 €
+## 10  2015 Saxony                         238371 238.371 €  
+## # ... with 50 more rows</code></pre>
+<pre class="r"><code># Step 2 - Visualize
+
+sales_by_year_state_tbl %&gt;%
+  
+  # Set up x, y, fill
+  ggplot(aes(x = year, y = sales, fill = state)) +
+  
+  # Geometries
+  geom_col() + # Run up to here to get a stacked bar plot
+  
+  # Facet
+  facet_wrap(~ state) +
+  
+  # Formatting
+  scale_y_continuous(labels = scales::dollar_format(big.mark = &quot;.&quot;, 
+                                                    decimal.mark = &quot;,&quot;, 
+                                                    prefix = &quot;&quot;, 
+                                                    suffix = &quot; €&quot;)) +
+  labs(
+    title = &quot;Revenue by year and state&quot;,
+    subtitle = &quot;Each state has a different trend&quot;,
+    fill = &quot;State&quot; # Changes the legend name
+  )</code></pre>
+<p><img src="journal_files/figure-html/unnamed-chunk-1-2.png" width="672" /></p>
+<pre class="r"><code># 7.0 Writing Files ----
+
+# 7.1 Excel ----
+install.packages(&quot;writexl&quot;)
+library(&quot;writexl&quot;)
+# bike_orderlines_wrangled_tbl %&gt;%
+#   write_xlsx(&quot;00_data/01_bike_sales/02_wrangled_data/bike_orderlines.xlsx&quot;)
+# 
+# # 7.2 CSV ----
+# bike_orderlines_wrangled_tbl %&gt;%
+#   write_csv(&quot;00_data/01_bike_sales/02_wrangled_data/bike_orderlines.csv&quot;)
+
+# 7.3 RDS ----
+bike_orderlines_wrangled_tbl %&gt;% 
+  write_rds(&quot;00_data/01_bike_sales/02_wrangled_data/bike_orderlines.rds&quot;)</code></pre>
 <div id="third-level-header" class="section level3">
-<h3><span class="header-section-number">19.0.1</span> third level header</h3>
+<h3><span class="header-section-number">1.0.1</span> third level header</h3>
 <p>Here’s an even lower level header</p>
 </div>
 </div>
 <div id="my-second-post-note-the-order" class="section level1">
-<h1><span class="header-section-number">20</span> My second post (note the order)</h1>
-<p>Last compiled: 2020-11-29</p>
+<h1><span class="header-section-number">2</span> My second post (note the order)</h1>
+<p>Last compiled: 2020-11-30</p>
 <p>I’m writing this tutorial going from the top down. And, this is how it will be printed. So, notice the second post is second in the list. If you want your most recent post to be at the top, then make a new post starting at the top. If you want the oldest first, do, then keep adding to the bottom</p>
 </div>
 <div id="adding-r-stuff" class="section level1">
-<h1><span class="header-section-number">21</span> Adding R stuff</h1>
+<h1><span class="header-section-number">3</span> Adding R stuff</h1>
 <p>So far this is just a blog where you can write in plain text and serve your writing to a webpage. One of the main purposes of this lab journal is to record your progress learning R. The reason I am asking you to use this process is because you can both make a website, and a lab journal, and learn R all in R-studio. This makes everything really convenient and in the same place.</p>
 <p>So, let’s say you are learning how to make a histogram in R. For example, maybe you want to sample 100 numbers from a normal distribution with mean = 0, and standard deviation = 1, and then you want to plot a histogram. You can do this right here by using an r code block, like this:</p>
 <pre class="r"><code>samples &lt;- rnorm(100, mean=0, sd=1)
 hist(samples)</code></pre>
-<p><img src="journal_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p><img src="journal_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 <p>When you knit this R Markdown document, you will see that the histogram is printed to the page, along with the R code. This document can be set up to hide the R code in the webpage, just delete the comment (hashtag) from the cold folding option in the yaml header up top. For purposes of letting yourself see the code, and me see the code, best to keep it the way that it is. You’ll learn that all of these things and more can be customized in each R code block.</p>
 </div>
 

@@ -37,6 +37,7 @@ Notice that whatever you define as a top level header, automatically gets put in
 library(tidyverse)
 
 library(readxl)
+options(repos="https://cran.rstudio.com" )
 
 # 2.0 Importing Files ----
 
@@ -159,18 +160,19 @@ sales_by_year_state_tbl %>%
 # 7.1 Excel ----
 install.packages("writexl")
 library("writexl")
-bike_orderlines_wrangled_tbl %>%
-  write_xlsx("00_data/01_bike_sales/02_wrangled_data/bike_orderlines.xlsx")
-
-# 7.2 CSV ----
-bike_orderlines_wrangled_tbl %>% 
-  write_csv("00_data/01_bike_sales/02_wrangled_data/bike_orderlines.csv")
+# bike_orderlines_wrangled_tbl %>%
+#   write_xlsx("00_data/01_bike_sales/02_wrangled_data/bike_orderlines.xlsx")
+# 
+# # 7.2 CSV ----
+# bike_orderlines_wrangled_tbl %>%
+#   write_csv("00_data/01_bike_sales/02_wrangled_data/bike_orderlines.csv")
 
 # 7.3 RDS ----
 bike_orderlines_wrangled_tbl %>% 
   write_rds("00_data/01_bike_sales/02_wrangled_data/bike_orderlines.rds")
 
 ```
+
 ### third level header
 
 Here's an even lower level header
