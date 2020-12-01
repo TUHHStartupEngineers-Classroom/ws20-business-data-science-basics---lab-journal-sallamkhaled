@@ -412,9 +412,9 @@ div.tocify {
 
 <p><strong>IMPORTANT:</strong> You can delete everything in here and start fresh. You might want to start by not deleting anything above this line until you know what that stuff is doing.</p>
 <p>This is an <code>.Rmd</code> file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a # in front of your text, it will create a top level-header.</p>
-<div id="my-first-post" class="section level1">
-<h1><span class="header-section-number">1</span> My first post</h1>
-<p>Last compiled: 2020-11-30</p>
+<div id="into-the-tidyverse-challenge" class="section level1">
+<h1><span class="header-section-number">1</span> Into the tidyverse Challenge</h1>
+<p>Last compiled: 2020-12-01</p>
 <p>Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left.</p>
 <pre class="r"><code>## First challenge task
 
@@ -592,14 +592,79 @@ library(&quot;writexl&quot;)
 # 7.3 RDS ----
 bike_orderlines_wrangled_tbl %&gt;% 
   write_rds(&quot;00_data/01_bike_sales/02_wrangled_data/bike_orderlines.rds&quot;)</code></pre>
-<div id="third-level-header" class="section level3">
-<h3><span class="header-section-number">1.0.1</span> third level header</h3>
+<p>#Data Acquistion Challenge</p>
+<pre class="r"><code># Challenge 1 - API ----
+library(httr)
+library(jsonlite)
+library(dplyr)
+library(RSQLite)
+library(dplyr)
+library(tibble)
+library(rvest)
+
+#Covid-19 Germany statistics
+
+url &lt;-  &quot;https://api.covid19api.com/dayone/country/germany/status/confirmed&quot;
+resp &lt;- GET(url)
+
+list &lt;- resp %&gt;%
+  .$content %&gt;%
+  rawToChar() %&gt;%
+  fromJSON() %&gt;%
+  head(10)
+
+list</code></pre>
+<pre><code>##    Country CountryCode Province City CityCode   Lat   Lon Cases    Status
+## 1  Germany          DE                        51.17 10.45     1 confirmed
+## 2  Germany          DE                        51.17 10.45     4 confirmed
+## 3  Germany          DE                        51.17 10.45     4 confirmed
+## 4  Germany          DE                        51.17 10.45     4 confirmed
+## 5  Germany          DE                        51.17 10.45     5 confirmed
+## 6  Germany          DE                        51.17 10.45     8 confirmed
+## 7  Germany          DE                        51.17 10.45    10 confirmed
+## 8  Germany          DE                        51.17 10.45    12 confirmed
+## 9  Germany          DE                        51.17 10.45    12 confirmed
+## 10 Germany          DE                        51.17 10.45    12 confirmed
+##                    Date
+## 1  2020-01-27T00:00:00Z
+## 2  2020-01-28T00:00:00Z
+## 3  2020-01-29T00:00:00Z
+## 4  2020-01-30T00:00:00Z
+## 5  2020-01-31T00:00:00Z
+## 6  2020-02-01T00:00:00Z
+## 7  2020-02-02T00:00:00Z
+## 8  2020-02-03T00:00:00Z
+## 9  2020-02-04T00:00:00Z
+## 10 2020-02-05T00:00:00Z</code></pre>
+<pre class="r"><code>#Challenge 2 - Web Scraping
+
+bike_webscraping &lt;- function(url) {
+  
+  bike_html &lt;- read_html(url)
+  bike_url_tbl  &lt;- bike_html %&gt;%
+    html_nodes(css = &quot;.catalog-category-bikes__title-text&quot;) %&gt;%
+    html_text()%&gt;%
+    enframe(name = &quot;No.&quot;, value = &quot;Bike.Name&quot;)
+  bike_database_tbl&lt;-bike_url_tbl%&gt;% 
+    mutate(price= bike_html%&gt;%
+             html_nodes(css =&quot;.catalog-category-bikes__price-title&quot;)%&gt;% html_text())
+  
+}
+url= &quot;https://www.rosebikes.de/fahrräder/gravel&quot;
+bike_prices&lt;-bike_webscraping(url)
+saveRDS(bike_prices,&quot;challenge-data_acquistion.rds&quot;)
+bike_prices</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##     No. Bike.Name              price              
+##   &lt;int&gt; &lt;chr&gt;                  &lt;chr&gt;              
+## 1     1 &quot;\nBACKROAD AL\n &quot;     &quot;\nab 1.549,00 €\n&quot;
+## 2     2 &quot;\nBACKROAD\n&quot;         &quot;\nab 2.599,00 €\n&quot;
+## 3     3 &quot;\nBACKROAD LIMITED\n&quot; &quot;\nab 4.599,00 €\n&quot;</code></pre>
 <p>Here’s an even lower level header</p>
-</div>
 </div>
 <div id="my-second-post-note-the-order" class="section level1">
 <h1><span class="header-section-number">2</span> My second post (note the order)</h1>
-<p>Last compiled: 2020-11-30</p>
+<p>Last compiled: 2020-12-01</p>
 </div>
 
 
