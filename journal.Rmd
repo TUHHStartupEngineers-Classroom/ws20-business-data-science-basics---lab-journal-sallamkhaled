@@ -173,7 +173,7 @@ bike_orderlines_wrangled_tbl %>%
 
 ```
 
-#Data Acquistion Challenge
+# Data Acquistion Challenge
 
 ``` {r}
 # Challenge 1 - API ----
@@ -204,23 +204,300 @@ bike_webscraping <- function(url) {
   
   bike_html <- read_html(url)
   bike_url_tbl  <- bike_html %>%
-    html_nodes(css = ".catalog-category-bikes__title-text") %>%
+    html_nodes(css = ".product-tile-title__brand") %>%
     html_text()%>%
-    enframe(name = "No.", value = "Bike.Name")
+    enframe(name = "#", value = "Bike")
   bike_database_tbl<-bike_url_tbl%>% 
     mutate(price= bike_html%>%
-             html_nodes(css =".catalog-category-bikes__price-title")%>% html_text())
+             html_nodes(css =".product-tile-price__current-value ")%>% html_text())
   
 }
-url= "https://www.rosebikes.de/fahrräder/gravel"
+url= "https://www.rosebikes.de/fahrräder/kinder"
 bike_prices<-bike_webscraping(url)
 saveRDS(bike_prices,"challenge-data_acquistion.rds")
 bike_prices
 
 ```
 
-Here's an even lower level header
+# Data Wrangling Challenge
 
-# My second post (note the order)
+```{r}
+library(vroom)
+library(tidyverse)
+library(data.table)
+library(tictoc)
+library(dbplyr)
+library(lubridate)
+
+## First the imports:
+
+col_types <- list(
+  id = col_character(),
+  type = col_skip(),
+  number = col_skip(),
+  country = col_skip(),
+  date = col_date("%Y-%m-%d"),
+  abstract = col_skip(),
+  title = col_skip(),
+  kind = col_skip(),
+  num_claims = col_skip(),
+  filename = col_skip(),
+  withdrawn = col_double()
+)
+
+patent_tbl <- vroom(
+  file       = "patent.tsv",
+  delim      = "\t",
+  col_types  = col_types,
+  na         = c("", "NA", "NULL")
+)
+
+#import assignee.tsv
+
+col_types2 <- list(
+  id = col_character(),
+  type = col_character(),
+  name_first = col_skip(),
+  name_last = col_skip(),
+  organization = col_character()
+)
+
+assignee_tbl <- vroom(
+  file       = "assignee.tsv", 
+  delim      = "\t", 
+  col_types  = col_types2,
+  na         = c("", "NA", "NULL")
+)
+
+# import patent_assignee.tsv
+col_types3 <- list(
+  patent_id = col_character(),
+  assignee_id = col_character(),
+  location_id = col_skip()
+)
+
+patentassignee_tbl <- vroom(
+  file       = "patent_assignee.tsv", 
+  delim      = "\t", 
+  col_types  = col_types3,
+  na         = c("", "NA", "NULL")
+)
+
+# Patent ----
+class(patent_tbl)
+setDT(patent_tbl)
+
+# Patent Assignee ----
+class(patentassignee_tbl)
+setDT(patentassignee_tbl)
+
+
+# Assignee ----
+class(assignee_tbl)
+setDT(assignee_tbl)
+
+
+
+# Question One
+
+#rename assignee_id to id to match pattent_assignee.tsv
+setnames(patentassignee_tbl, "assignee_id", "id")
+tic()
+combined_data <- merge(x = patentassignee_tbl, y = assignee_tbl, 
+                       by    = "id", 
+                       all.x = TRUE, 
+                       all.y = TRUE)
+toc()
+
+# Selecting only US company/corporation (type 2), then summing unique patent ids
+setorderv(combined_data, c("type", "organization"))
+combined_data_type2 <- combined_data %>%
+  filter(type == 2)
+number_distinct_patents_tbl <- combined_data_type2[, .(number_of_distinct_patents = length(unique(patent_id))), by = organization]
+head(arrange(number_distinct_patents_tbl,desc(number_of_distinct_patents)), n = 10)
+
+
+#Question Two
+
+#adding the year from patent_tbl and filtering by 2019
+setnames(patent_tbl, "id", "patent_id")
+combined_data_type2 <- merge(x = combined_data_type2, y = patent_tbl, 
+                       by    = "patent_id", 
+                       all.x = TRUE, 
+                       all.y = TRUE)
+patents_2019 <- combined_data_type2 %>%
+  mutate(year = year(date)) %>%
+  filter(year == 2019)
+
+#displaying the first 11 entries (as first is NA)
+patents_2019_freq <- patents_2019[, .(number = length(unique(patent_id))), by = organization]
+head(arrange(patents_2019_freq,desc(number)), n = 11)
+
+
+#Question Three
+col_types4 <- list(
+  uuid = col_skip(),
+  patent_id = col_character(),
+  mainclass_id = col_character(),
+  subclass_id = col_skip(),
+  sequence = col_skip()
+)
+
+uspc_tbl <- vroom(
+  file       = "uspc.tsv",
+  delim      = "\t",
+  col_types  = col_types4,
+  na         = c("", "NA", "NULL")
+)
+
+class(uspc_tbl)
+setDT(uspc_tbl)
+
+combined_data_uspc <- merge(x = combined_data, y = uspc_tbl, 
+                             by    = "patent_id", 
+                             all.x = TRUE, 
+                             all.y = TRUE)
+combined_data_uspc_wrang <- combined_data_uspc[, .(number_of_distinct_patents = length(unique(patent_id))), by = mainclass_id]
+head(arrange(combined_data_uspc_wrang,desc(number_of_distinct_patents)), n = 10)
+
+
+```
+
+# Data Visualization Challenge
+
+```{r}
+library(tidyverse)
+library(maps)
+library(dplyr)
+library(lubridate)
+library(scales)
+#Challenge 1 -----------------------------------------
+
+#Imports ----
+covid_data_tbl <- read_csv("https://opendata.ecdc.europa.eu/covid19/casedistribution/csv")
+world <- map_data("world")
+
+#Wrangling -----
+covid_data_tbl <- covid_data_tbl %>%
+  mutate(across(countriesAndTerritories, str_replace_all, "_", " ")) %>%
+  mutate(countriesAndTerritories = case_when(
+    
+    countriesAndTerritories == "United Kingdom" ~ "UK",
+    countriesAndTerritories == "United States of America" ~ "USA",
+    countriesAndTerritories == "Czechia" ~ "Czech Republic",
+    TRUE ~ countriesAndTerritories
+    
+  ))
+covid_data_tbl <- covid_data_tbl %>% filter(
+  countriesAndTerritories %in% c("Germany","France","UK","Spain","USA")
+)
+
+
+#change dateRep to date column type
+covid_data_tbl <- covid_data_tbl %>%
+  group_by(dateRep) %>%
+  mutate(dateRep=as.Date(dateRep, format = "%d/%m/%Y"))
+
+# sort by country then arrange by date in ascending order
+covid_data_tbl <- covid_data_tbl %>%
+
+  group_by(countriesAndTerritories) %>%
+  arrange(dateRep, by_group = TRUE) %>%
+  arrange(countriesAndTerritories) %>%
+  ungroup()
+
+#calculate cumulative sums
+covid_data_tbl <- covid_data_tbl %>% 
+  select(dateRep, cases, deaths, popData2019, countriesAndTerritories) %>%
+  group_by(countriesAndTerritories)
+covid_data_tbl$csum <- ave(covid_data_tbl$cases, covid_data_tbl$countriesAndTerritories, FUN=cumsum)
+
+#Visualization ----
+covid_data_tbl %>%
+  
+  ggplot(aes(x = dateRep, y = csum, color = countriesAndTerritories)) +
+  
+  geom_line(size = 1.2, linetype = 1) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%B") +
+  scale_y_continuous(n.breaks = 10, labels = unit_format(unit = "M", scale = 1e-6)) +
+  scale_colour_manual(values = c("red", "blue", "green", "cyan", "orange")) +
+  
+labs(
+  title = "Covid-19 confirmed cases worldwide",
+  subtitle = "As of 03/12, USA is the leading country in number of cases",
+  caption = "Data from https://opendata.ecdc.europa.eu/covid19/casedistribution/csv",
+  x = "Year 2020",
+  y = "Cumulitive cases",
+  color = "Country" # Legend text
+)
+
+#Challenge 2 -------------------------------------------------------------------------------
+#Imports ----
+covid_data_tbl_2 <- read_csv("https://opendata.ecdc.europa.eu/covid19/casedistribution/csv")
+world <- map_data("world")
+
+#Wrangling -----
+covid_data_tbl_2 <- covid_data_tbl_2 %>%
+  mutate(across(countriesAndTerritories, str_replace_all, "_", " ")) %>%
+  mutate(countriesAndTerritories = case_when(
+    
+    countriesAndTerritories == "United Kingdom" ~ "UK",
+    countriesAndTerritories == "United States of America" ~ "USA",
+    countriesAndTerritories == "Czechia" ~ "Czech Republic",
+    TRUE ~ countriesAndTerritories
+    
+  ))
+
+
+#change dateRep to date column type
+covid_data_tbl_2 <- covid_data_tbl_2 %>%
+  group_by(dateRep) %>%
+  mutate(dateRep=as.Date(dateRep, format = "%d/%m/%Y"))
+
+# sort by country then arrange by date in ascending order
+covid_data_tbl_2 <- covid_data_tbl_2 %>%
+  
+  group_by(countriesAndTerritories) %>%
+  arrange(dateRep, by_group = TRUE) %>%
+  arrange(countriesAndTerritories) %>%
+  ungroup()
+
+covid_data_deaths <- covid_data_tbl_2 %>%
+group_by(countriesAndTerritories, popData2019) %>%
+  summarize(total_deaths = sum(deaths)) %>%
+  ungroup() %>%
+  mutate(mortalityrate = (total_deaths / popData2019) *100) %>%
+  mutate(mortalityrate_text = scales::dollar(mortalityrate, big.mark = ",", decimal.mark = ".", prefix = "", suffix = "%"))
+
+world <- plyr::rename(
+  world, 
+  replace      = c(region="countriesAndTerritories", foo="missing_varible"),
+  warn_missing = FALSE
+)
+
+covid_data_deaths <- covid_data_deaths %>%
+  merge(y = world, by = "countriesAndTerritories", all.x = FALSE, all.y = FALSE)
+
+world <- plyr::rename(
+  world, 
+  replace      = c(countriesAndTerritories="region", foo="missing_varible"),
+  warn_missing = FALSE
+)
+
+covid_data_deaths %>%
+  ggplot(aes(map_id = countriesAndTerritories )) +
+  scale_fill_gradient(low="red", high="black", name = "Mortality Rate %", n.breaks = 6) +
+  geom_map(aes(fill = mortalityrate), map = world) +
+  expand_limits(x = covid_data_deaths$long, y = covid_data_deaths$lat) +
+
+  labs(
+    title = "Confirmed Covid-19 deaths relative to the size of the population",
+    subtitle = "More than 1.2 Million confirmed deaths worldwide",
+    caption = "Challenge 2 - Date as of 03/12/20",
+    x = "",
+    y = ""
+  )
+
+```
 
 Last compiled: `r Sys.Date()`

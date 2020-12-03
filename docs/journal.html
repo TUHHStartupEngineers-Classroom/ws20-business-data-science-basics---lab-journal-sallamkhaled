@@ -414,7 +414,7 @@ div.tocify {
 <p>This is an <code>.Rmd</code> file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a # in front of your text, it will create a top level-header.</p>
 <div id="into-the-tidyverse-challenge" class="section level1">
 <h1><span class="header-section-number">1</span> Into the tidyverse Challenge</h1>
-<p>Last compiled: 2020-12-01</p>
+<p>Last compiled: 2020-12-03</p>
 <p>Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left.</p>
 <pre class="r"><code>## First challenge task
 
@@ -592,7 +592,9 @@ library(&quot;writexl&quot;)
 # 7.3 RDS ----
 bike_orderlines_wrangled_tbl %&gt;% 
   write_rds(&quot;00_data/01_bike_sales/02_wrangled_data/bike_orderlines.rds&quot;)</code></pre>
-<p>#Data Acquistion Challenge</p>
+</div>
+<div id="data-acquistion-challenge" class="section level1">
+<h1><span class="header-section-number">2</span> Data Acquistion Challenge</h1>
 <pre class="r"><code># Challenge 1 - API ----
 library(httr)
 library(jsonlite)
@@ -642,29 +644,341 @@ bike_webscraping &lt;- function(url) {
   
   bike_html &lt;- read_html(url)
   bike_url_tbl  &lt;- bike_html %&gt;%
-    html_nodes(css = &quot;.catalog-category-bikes__title-text&quot;) %&gt;%
+    html_nodes(css = &quot;.product-tile-title__brand&quot;) %&gt;%
     html_text()%&gt;%
-    enframe(name = &quot;No.&quot;, value = &quot;Bike.Name&quot;)
+    enframe(name = &quot;#&quot;, value = &quot;Bike&quot;)
   bike_database_tbl&lt;-bike_url_tbl%&gt;% 
     mutate(price= bike_html%&gt;%
-             html_nodes(css =&quot;.catalog-category-bikes__price-title&quot;)%&gt;% html_text())
+             html_nodes(css =&quot;.product-tile-price__current-value &quot;)%&gt;% html_text())
   
 }
-url= &quot;https://www.rosebikes.de/fahrräder/gravel&quot;
+url= &quot;https://www.rosebikes.de/fahrräder/kinder&quot;
 bike_prices&lt;-bike_webscraping(url)
 saveRDS(bike_prices,&quot;challenge-data_acquistion.rds&quot;)
 bike_prices</code></pre>
-<pre><code>## # A tibble: 3 x 3
-##     No. Bike.Name              price              
-##   &lt;int&gt; &lt;chr&gt;                  &lt;chr&gt;              
-## 1     1 &quot;\nBACKROAD AL\n &quot;     &quot;\nab 1.549,00 €\n&quot;
-## 2     2 &quot;\nBACKROAD\n&quot;         &quot;\nab 2.599,00 €\n&quot;
-## 3     3 &quot;\nBACKROAD LIMITED\n&quot; &quot;\nab 4.599,00 €\n&quot;</code></pre>
-<p>Here’s an even lower level header</p>
+<pre><code>## # A tibble: 10 x 3
+##      `#` Bike              price         
+##    &lt;int&gt; &lt;chr&gt;             &lt;chr&gt;         
+##  1     1 &quot;\nROSE\n&quot;        &quot;\n129,00 €\n&quot;
+##  2     2 &quot;\nEarly Rider\n&quot; &quot;\n169,95 €\n&quot;
+##  3     3 &quot;\nEarly Rider\n&quot; &quot;\n379,95 €\n&quot;
+##  4     4 &quot;\nEarly Rider\n&quot; &quot;\n399,95 €\n&quot;
+##  5     5 &quot;\nEarly Rider\n&quot; &quot;\n399,95 €\n&quot;
+##  6     6 &quot;\nEarly Rider\n&quot; &quot;\n399,95 €\n&quot;
+##  7     7 &quot;\nEarly Rider\n&quot; &quot;\n599,00 €\n&quot;
+##  8     8 &quot;\nEarly Rider\n&quot; &quot;\n549,99 €\n&quot;
+##  9     9 &quot;\nEarly Rider\n&quot; &quot;\n649,00 €\n&quot;
+## 10    10 &quot;\nEarly Rider\n&quot; &quot;\n724,95 €\n&quot;</code></pre>
 </div>
-<div id="my-second-post-note-the-order" class="section level1">
-<h1><span class="header-section-number">2</span> My second post (note the order)</h1>
-<p>Last compiled: 2020-12-01</p>
+<div id="data-wrangling-challenge" class="section level1">
+<h1><span class="header-section-number">3</span> Data Wrangling Challenge</h1>
+<pre class="r"><code>library(vroom)
+library(tidyverse)
+library(data.table)
+library(tictoc)
+library(dbplyr)
+library(lubridate)
+
+## First the imports:
+
+col_types &lt;- list(
+  id = col_character(),
+  type = col_skip(),
+  number = col_skip(),
+  country = col_skip(),
+  date = col_date(&quot;%Y-%m-%d&quot;),
+  abstract = col_skip(),
+  title = col_skip(),
+  kind = col_skip(),
+  num_claims = col_skip(),
+  filename = col_skip(),
+  withdrawn = col_double()
+)
+
+patent_tbl &lt;- vroom(
+  file       = &quot;patent.tsv&quot;,
+  delim      = &quot;\t&quot;,
+  col_types  = col_types,
+  na         = c(&quot;&quot;, &quot;NA&quot;, &quot;NULL&quot;)
+)
+
+#import assignee.tsv
+
+col_types2 &lt;- list(
+  id = col_character(),
+  type = col_character(),
+  name_first = col_skip(),
+  name_last = col_skip(),
+  organization = col_character()
+)
+
+assignee_tbl &lt;- vroom(
+  file       = &quot;assignee.tsv&quot;, 
+  delim      = &quot;\t&quot;, 
+  col_types  = col_types2,
+  na         = c(&quot;&quot;, &quot;NA&quot;, &quot;NULL&quot;)
+)
+
+# import patent_assignee.tsv
+col_types3 &lt;- list(
+  patent_id = col_character(),
+  assignee_id = col_character(),
+  location_id = col_skip()
+)
+
+patentassignee_tbl &lt;- vroom(
+  file       = &quot;patent_assignee.tsv&quot;, 
+  delim      = &quot;\t&quot;, 
+  col_types  = col_types3,
+  na         = c(&quot;&quot;, &quot;NA&quot;, &quot;NULL&quot;)
+)
+
+# Patent ----
+class(patent_tbl)</code></pre>
+<pre><code>## [1] &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</code></pre>
+<pre class="r"><code>setDT(patent_tbl)
+
+# Patent Assignee ----
+class(patentassignee_tbl)</code></pre>
+<pre><code>## [1] &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</code></pre>
+<pre class="r"><code>setDT(patentassignee_tbl)
+
+
+# Assignee ----
+class(assignee_tbl)</code></pre>
+<pre><code>## [1] &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</code></pre>
+<pre class="r"><code>setDT(assignee_tbl)
+
+
+
+# Question One
+
+#rename assignee_id to id to match pattent_assignee.tsv
+setnames(patentassignee_tbl, &quot;assignee_id&quot;, &quot;id&quot;)
+tic()
+combined_data &lt;- merge(x = patentassignee_tbl, y = assignee_tbl, 
+                       by    = &quot;id&quot;, 
+                       all.x = TRUE, 
+                       all.y = TRUE)
+toc()</code></pre>
+<pre><code>## 17.55 sec elapsed</code></pre>
+<pre class="r"><code># Selecting only US company/corporation (type 2), then summing unique patent ids
+setorderv(combined_data, c(&quot;type&quot;, &quot;organization&quot;))
+combined_data_type2 &lt;- combined_data %&gt;%
+  filter(type == 2)
+number_distinct_patents_tbl &lt;- combined_data_type2[, .(number_of_distinct_patents = length(unique(patent_id))), by = organization]
+head(arrange(number_distinct_patents_tbl,desc(number_of_distinct_patents)), n = 10)</code></pre>
+<pre><code>##                                    organization number_of_distinct_patents
+##  1: International Business Machines Corporation                     139091
+##  2:                    General Electric Company                      47121
+##  3:                           Intel Corporation                      42149
+##  4:   Hewlett-Packard Development Company, L.P.                      35573
+##  5:                       Microsoft Corporation                      30086
+##  6:                     Micron Technology, Inc.                      28001
+##  7:                       QUALCOMM Incorporated                      24703
+##  8:              Texas Instruments Incorporated                      24182
+##  9:                           Xerox Corporation                      23174
+## 10:                                  Apple Inc.                      21821</code></pre>
+<pre class="r"><code>#Question Two
+
+#adding the year from patent_tbl and filtering by 2019
+setnames(patent_tbl, &quot;id&quot;, &quot;patent_id&quot;)
+combined_data_type2 &lt;- merge(x = combined_data_type2, y = patent_tbl, 
+                       by    = &quot;patent_id&quot;, 
+                       all.x = TRUE, 
+                       all.y = TRUE)
+patents_2019 &lt;- combined_data_type2 %&gt;%
+  mutate(year = year(date)) %&gt;%
+  filter(year == 2019)
+
+#displaying the first 11 entries (as first is NA)
+patents_2019_freq &lt;- patents_2019[, .(number = length(unique(patent_id))), by = organization]
+head(arrange(patents_2019_freq,desc(number)), n = 11)</code></pre>
+<pre><code>##                                    organization number
+##  1:                                        &lt;NA&gt; 214011
+##  2: International Business Machines Corporation   9265
+##  3:                           Intel Corporation   3525
+##  4:         Microsoft Technology Licensing, LLC   3106
+##  5:                                  Apple Inc.   2817
+##  6:               Ford Global Technologies, LLC   2624
+##  7:                   Amazon Technologies, Inc.   2533
+##  8:                       QUALCOMM Incorporated   2359
+##  9:                                 Google Inc.   2290
+## 10:                    General Electric Company   1860
+## 11:   Hewlett-Packard Development Company, L.P.   1589</code></pre>
+<pre class="r"><code>#Question Three
+col_types4 &lt;- list(
+  uuid = col_skip(),
+  patent_id = col_character(),
+  mainclass_id = col_character(),
+  subclass_id = col_skip(),
+  sequence = col_skip()
+)
+
+uspc_tbl &lt;- vroom(
+  file       = &quot;uspc.tsv&quot;,
+  delim      = &quot;\t&quot;,
+  col_types  = col_types4,
+  na         = c(&quot;&quot;, &quot;NA&quot;, &quot;NULL&quot;)
+)
+
+class(uspc_tbl)</code></pre>
+<pre><code>## [1] &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</code></pre>
+<pre class="r"><code>setDT(uspc_tbl)
+
+combined_data_uspc &lt;- merge(x = combined_data, y = uspc_tbl, 
+                             by    = &quot;patent_id&quot;, 
+                             all.x = TRUE, 
+                             all.y = TRUE)
+combined_data_uspc_wrang &lt;- combined_data_uspc[, .(number_of_distinct_patents = length(unique(patent_id))), by = mainclass_id]
+head(arrange(combined_data_uspc_wrang,desc(number_of_distinct_patents)), n = 10)</code></pre>
+<pre><code>##     mainclass_id number_of_distinct_patents
+##  1:         &lt;NA&gt;                    2172485
+##  2:          257                     148796
+##  3:          428                     125576
+##  4:          435                     119685
+##  5:          514                     118258
+##  6:          424                     110764
+##  7:          370                     110590
+##  8:          438                     108537
+##  9:          455                     108016
+## 10:          340                      93575</code></pre>
+</div>
+<div id="data-visualization-challenge" class="section level1">
+<h1><span class="header-section-number">4</span> Data Visualization Challenge</h1>
+<pre class="r"><code>library(tidyverse)
+library(maps)
+library(dplyr)
+library(lubridate)
+library(scales)
+#Challenge 1 -----------------------------------------
+
+#Imports ----
+covid_data_tbl &lt;- read_csv(&quot;https://opendata.ecdc.europa.eu/covid19/casedistribution/csv&quot;)
+world &lt;- map_data(&quot;world&quot;)
+
+#Wrangling -----
+covid_data_tbl &lt;- covid_data_tbl %&gt;%
+  mutate(across(countriesAndTerritories, str_replace_all, &quot;_&quot;, &quot; &quot;)) %&gt;%
+  mutate(countriesAndTerritories = case_when(
+    
+    countriesAndTerritories == &quot;United Kingdom&quot; ~ &quot;UK&quot;,
+    countriesAndTerritories == &quot;United States of America&quot; ~ &quot;USA&quot;,
+    countriesAndTerritories == &quot;Czechia&quot; ~ &quot;Czech Republic&quot;,
+    TRUE ~ countriesAndTerritories
+    
+  ))
+covid_data_tbl &lt;- covid_data_tbl %&gt;% filter(
+  countriesAndTerritories %in% c(&quot;Germany&quot;,&quot;France&quot;,&quot;UK&quot;,&quot;Spain&quot;,&quot;USA&quot;)
+)
+
+
+#change dateRep to date column type
+covid_data_tbl &lt;- covid_data_tbl %&gt;%
+  group_by(dateRep) %&gt;%
+  mutate(dateRep=as.Date(dateRep, format = &quot;%d/%m/%Y&quot;))
+
+# sort by country then arrange by date in ascending order
+covid_data_tbl &lt;- covid_data_tbl %&gt;%
+
+  group_by(countriesAndTerritories) %&gt;%
+  arrange(dateRep, by_group = TRUE) %&gt;%
+  arrange(countriesAndTerritories) %&gt;%
+  ungroup()
+
+#calculate cumulative sums
+covid_data_tbl &lt;- covid_data_tbl %&gt;% 
+  select(dateRep, cases, deaths, popData2019, countriesAndTerritories) %&gt;%
+  group_by(countriesAndTerritories)
+covid_data_tbl$csum &lt;- ave(covid_data_tbl$cases, covid_data_tbl$countriesAndTerritories, FUN=cumsum)
+
+#Visualization ----
+covid_data_tbl %&gt;%
+  
+  ggplot(aes(x = dateRep, y = csum, color = countriesAndTerritories)) +
+  
+  geom_line(size = 1.2, linetype = 1) +
+  scale_x_date(date_breaks = &quot;1 month&quot;, date_labels = &quot;%B&quot;) +
+  scale_y_continuous(n.breaks = 10, labels = unit_format(unit = &quot;M&quot;, scale = 1e-6)) +
+  scale_colour_manual(values = c(&quot;red&quot;, &quot;blue&quot;, &quot;green&quot;, &quot;cyan&quot;, &quot;orange&quot;)) +
+  
+labs(
+  title = &quot;Covid-19 confirmed cases worldwide&quot;,
+  subtitle = &quot;As of 03/12, USA is the leading country in number of cases&quot;,
+  caption = &quot;Data from https://opendata.ecdc.europa.eu/covid19/casedistribution/csv&quot;,
+  x = &quot;Year 2020&quot;,
+  y = &quot;Cumulitive cases&quot;,
+  color = &quot;Country&quot; # Legend text
+)</code></pre>
+<p><img src="journal_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre class="r"><code>#Challenge 2 -------------------------------------------------------------------------------
+#Imports ----
+covid_data_tbl_2 &lt;- read_csv(&quot;https://opendata.ecdc.europa.eu/covid19/casedistribution/csv&quot;)
+world &lt;- map_data(&quot;world&quot;)
+
+#Wrangling -----
+covid_data_tbl_2 &lt;- covid_data_tbl_2 %&gt;%
+  mutate(across(countriesAndTerritories, str_replace_all, &quot;_&quot;, &quot; &quot;)) %&gt;%
+  mutate(countriesAndTerritories = case_when(
+    
+    countriesAndTerritories == &quot;United Kingdom&quot; ~ &quot;UK&quot;,
+    countriesAndTerritories == &quot;United States of America&quot; ~ &quot;USA&quot;,
+    countriesAndTerritories == &quot;Czechia&quot; ~ &quot;Czech Republic&quot;,
+    TRUE ~ countriesAndTerritories
+    
+  ))
+
+
+#change dateRep to date column type
+covid_data_tbl_2 &lt;- covid_data_tbl_2 %&gt;%
+  group_by(dateRep) %&gt;%
+  mutate(dateRep=as.Date(dateRep, format = &quot;%d/%m/%Y&quot;))
+
+# sort by country then arrange by date in ascending order
+covid_data_tbl_2 &lt;- covid_data_tbl_2 %&gt;%
+  
+  group_by(countriesAndTerritories) %&gt;%
+  arrange(dateRep, by_group = TRUE) %&gt;%
+  arrange(countriesAndTerritories) %&gt;%
+  ungroup()
+
+covid_data_deaths &lt;- covid_data_tbl_2 %&gt;%
+group_by(countriesAndTerritories, popData2019) %&gt;%
+  summarize(total_deaths = sum(deaths)) %&gt;%
+  ungroup() %&gt;%
+  mutate(mortalityrate = (total_deaths / popData2019) *100) %&gt;%
+  mutate(mortalityrate_text = scales::dollar(mortalityrate, big.mark = &quot;,&quot;, decimal.mark = &quot;.&quot;, prefix = &quot;&quot;, suffix = &quot;%&quot;))
+
+world &lt;- plyr::rename(
+  world, 
+  replace      = c(region=&quot;countriesAndTerritories&quot;, foo=&quot;missing_varible&quot;),
+  warn_missing = FALSE
+)
+
+covid_data_deaths &lt;- covid_data_deaths %&gt;%
+  merge(y = world, by = &quot;countriesAndTerritories&quot;, all.x = FALSE, all.y = FALSE)
+
+world &lt;- plyr::rename(
+  world, 
+  replace      = c(countriesAndTerritories=&quot;region&quot;, foo=&quot;missing_varible&quot;),
+  warn_missing = FALSE
+)
+
+covid_data_deaths %&gt;%
+  ggplot(aes(map_id = countriesAndTerritories )) +
+  scale_fill_gradient(low=&quot;red&quot;, high=&quot;black&quot;, name = &quot;Mortality Rate %&quot;, n.breaks = 6) +
+  geom_map(aes(fill = mortalityrate), map = world) +
+  expand_limits(x = covid_data_deaths$long, y = covid_data_deaths$lat) +
+
+  labs(
+    title = &quot;Confirmed Covid-19 deaths relative to the size of the population&quot;,
+    subtitle = &quot;More than 1.2 Million confirmed deaths worldwide&quot;,
+    caption = &quot;Challenge 2 - Date as of 03/12/20&quot;,
+    x = &quot;&quot;,
+    y = &quot;&quot;
+  )</code></pre>
+<p><img src="journal_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+<p>Last compiled: 2020-12-03</p>
 </div>
 
 

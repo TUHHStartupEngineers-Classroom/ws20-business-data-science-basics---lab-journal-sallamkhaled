@@ -37,3 +37,13 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+assignee.tsv
+assignee.tsv.zip
+docs/uspc.tsv
+docs/patent_assignee.tsv
+docs/patent_assignee.tsv.zip
+patent.tsv
+patent_assignee.tsv
+patent_assignee.tsv.zip
+uspc.tsv
+uspc.tsv.zip
