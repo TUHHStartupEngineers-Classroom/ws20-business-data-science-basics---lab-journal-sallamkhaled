@@ -414,7 +414,7 @@ div.tocify {
 <p>This is an <code>.Rmd</code> file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a # in front of your text, it will create a top level-header.</p>
 <div id="into-the-tidyverse-challenge" class="section level1">
 <h1><span class="header-section-number">1</span> Into the tidyverse Challenge</h1>
-<p>Last compiled: 2020-12-03</p>
+<p>Last compiled: 2020-12-06</p>
 <p>Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left.</p>
 <pre class="r"><code>## First challenge task
 
@@ -967,6 +967,8 @@ world &lt;- plyr::rename(
 covid_data_deaths %&gt;%
   ggplot(aes(map_id = countriesAndTerritories )) +
   scale_fill_gradient(low=&quot;red&quot;, high=&quot;black&quot;, name = &quot;Mortality Rate %&quot;, n.breaks = 6) +
+  geom_map(data = world, map = world,
+           aes(map_id=region), fill=&quot;grey&quot;, color=&quot;white&quot;) +
   geom_map(aes(fill = mortalityrate), map = world) +
   expand_limits(x = covid_data_deaths$long, y = covid_data_deaths$lat) +
 
@@ -978,7 +980,7 @@ covid_data_deaths %&gt;%
     y = &quot;&quot;
   )</code></pre>
 <p><img src="journal_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
-<p>Last compiled: 2020-12-03</p>
+<p>Last compiled: 2020-12-06</p>
 </div>
 
 

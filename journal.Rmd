@@ -487,6 +487,8 @@ world <- plyr::rename(
 covid_data_deaths %>%
   ggplot(aes(map_id = countriesAndTerritories )) +
   scale_fill_gradient(low="red", high="black", name = "Mortality Rate %", n.breaks = 6) +
+  geom_map(data = world, map = world,
+           aes(map_id=region), fill="grey", color="white") +
   geom_map(aes(fill = mortalityrate), map = world) +
   expand_limits(x = covid_data_deaths$long, y = covid_data_deaths$lat) +
 

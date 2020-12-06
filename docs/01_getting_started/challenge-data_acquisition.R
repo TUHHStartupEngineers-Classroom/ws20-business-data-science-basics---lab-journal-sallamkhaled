@@ -5,6 +5,7 @@ library(dplyr)
 library(RSQLite)
 library(dplyr)
 library(tibble)
+library(rvest)
 
 #Covid-19 Germany statistics
 
