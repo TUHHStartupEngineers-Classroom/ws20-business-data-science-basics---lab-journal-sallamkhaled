@@ -134,6 +134,7 @@ sales_by_year_state_tbl %>%
   
   # Geometries
   geom_col() + # Run up to here to get a stacked bar plot
+  geom_smooth(method = "lm", se = FALSE) +
   
   # Facet
   facet_wrap(~ state) +
